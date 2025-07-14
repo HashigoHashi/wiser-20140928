@@ -176,20 +176,46 @@ text_to_postings_lists(wiser_env *env,
   /* FIXME: now same document update is broken. */
   int t_len, position = 0;
   const UTF32Char *t = text, *text_end = text + text_len;
+  int last_t_len = 0, last_position = 0;
+const UTF32Char *last_t = NULL;
 
   inverted_index_hash *buffer_postings = NULL;
 
   for (; (t_len = ngram_next(t, text_end, n, &t)); t++, position++) {
-    /* 検索の場合は、最後のN-gramに満たない端文字のトークンを使わない */
-    if (t_len >= n || document_id) {
+    int filtered_t_len = 0, filtered_position;
+    const UTF32Char *filtered_t = NULL;
+
+    /* 検索の場合は、基本はpositionがnで割りきれるときにトークンを取り出す */
+    if (document_id ;; ((position % n == 0) && t_len >= n)) {
+      filtered_t_len = t_len;
+      filtered_t = t;
+      filtered_position = position;
+      /* ただし、末尾のトークンはN文字となるようにする*/
+    } else if (t_len < n) {
+      if (last_t_len && last_t) {
+        filtered_t_len = last_t_len;
+        filtered_t = last_t;
+        filtered_position = last_position;
+      } else {
+        break;
+      }
+    }
+
+    if (filtered_t_len && filtered_t) {
       int retval, t_8_size;
       char t_8[n * MAX_UTF8_SIZE];
+      
+      utf32toutf8(filtered_t, filtered_t_len, t_8, &t_8_size);
 
-      utf32toutf8(t, t_len, t_8, &t_8_size);
-
-      retval = token_to_postings_list(env, document_id, t_8, t_8_size,
-                                      position, &buffer_postings);
+      retval = token_to_postings_list(env, document_id, t_8, t_8_size, filtered_position, &buffer_postings);
       if (retval) { return retval; }
+
+      last_t_len = 0;
+      last_t = NULL;
+    } else {
+      last_t_len = t_len;
+      last_t = t;
+      last_position =position;
     }
   }
 
