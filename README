@@ -1,1 +1,13 @@
 This program enables you to fulltext-search for wikipedia.
+
+yum install gcc sqlite sqlite-devel expat-devel bzip2
+
+cd ./wiser-20140928
+make
+bunzip2 -k jawiki-latest-pages-articles.xml.bzip2
+
+# 転置インデックス構築
+./wiser -x jawiki-latest-pages-articles.xml -m 1000 wikipedia_1000.db
+
+# 検索
+./wiser -q 'perl' wikipedia_1000.db
