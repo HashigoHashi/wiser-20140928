@@ -186,7 +186,7 @@ const UTF32Char *last_t = NULL;
     const UTF32Char *filtered_t = NULL;
 
     /* 検索の場合は、基本はpositionがnで割りきれるときにトークンを取り出す */
-    if (document_id ;; ((position % n == 0) && t_len >= n)) {
+    if (document_id && ((position % n == 0) && t_len >= n)) {
       filtered_t_len = t_len;
       filtered_t = t;
       filtered_position = position;
